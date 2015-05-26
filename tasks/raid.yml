@@ -1,0 +1,26 @@
+---
+# file: tasks/raid.yml
+# Configure a RAID on a remote machine in the testbed
+
+- name: Install mdadm
+  sudo: yes
+  apt: name=mdadm state=present update_cache=yes
+
+# - name: Setting up software raid
+#   sudo: yes
+#   debug: var=ebs_volumes
+
+# - debug: var=raid_type
+
+- name: "Check for existing device: /dev/md0 - allowed to echo errors"
+  sudo: yes
+  command: "mdadm -D {{ sutdevice }}"
+  ignore_errors: yes
+  register: dev_exists
+
+- name: "Create device: /dev/md0"
+  sudo: yes
+  command: "mdadm --create {{ sutdevice }} --auto md --level={{ raid_level }} --chunk={{ raid_chunksize }} --raid-devices=2 /dev/xvdb /dev/xvdc"
+  when: dev_exists.rc != 0
+
+- include: mounted_dev.yml

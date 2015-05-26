@@ -1,0 +1,93 @@
+{# file: /roles/fio/templates/exe_exp.sh.j2 #}
+{# Jinja2 template to render a bash script to execute a set of fio workloads #}
+#!/bin/bash
+#
+#
+#	REQUIREMENTS:
+#	- Workloads are present in:
+#		$WORKLOADS/load/*
+#		$WORKLOADS/burn/*
+#		$WORKLOADS/run/*
+#	- Result dir is accessible
+#	- S3 uploads can be executed
+#
+
+LOAD_WL_DIR={{ workload_dir }}/load
+BURN_WL_DIR={{ workload_dir }}/burn
+RUN_WL_DIR={{ workload_dir }}/run
+# INSTANCEID=
+STARTTIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Upload results to S3
+s3_dir=s3://{{ aws_s3_bucket }}/fioebs/{{ exp_name }}/{{ aws_region }}/{{ aws_instance_type  | replace('.','_')}}/{{ ebs_device_type }}/filenb_{{ fio_nrfiles }}/filesize_{{ fio_filesize }}/{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] | replace('.','_') }}
+
+### LOAD PHASE ###
+for w in $LOAD_WL_DIR/*
+do
+  # echo "Processing workload file: $w"
+  # Create result folder
+  wl_name=$(basename $w .job)
+  res_dir={{ result_dir }}/$wl_name
+  res_file=$res_dir/res_$wl_name
+
+  mkdir $res_dir
+  touch $res_file
+
+  cd $res_dir
+  fio $w >> $res_file
+
+  cp $w $res_dir
+done
+
+### BURN PHASE ###
+for w in $BURN_WL_DIR/*
+do
+  # echo "Processing workload file: $w"
+  # Create result folder
+  wl_name=$(basename $w .job)
+  res_dir={{ result_dir }}/$wl_name
+  res_file=$res_dir/res_$wl_name
+
+  mkdir $res_dir
+  touch $res_file
+
+  cd $res_dir
+  fio $w >> $res_file
+
+  cp $w $res_dir
+done
+
+### RUN PHASE ###
+for w in $RUN_WL_DIR/*
+do
+  # echo "Processing workload file: $w"
+  # Create result folder
+  wl_name=$(basename $w .job)
+  res_dir={{ result_dir }}/$wl_name
+  res_file=$res_dir/res_$wl_name
+
+  mkdir $res_dir
+  touch $res_file
+
+  cd $res_dir
+  fio $w >> $res_file
+
+  cp $w $res_dir
+done
+
+### COLLECT RESULTS ###
+
+# ENDTIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# for m in {"CPUUtilization"}
+# do
+#   aws cloudwatch get-metric-statistics --metric-name $m --start-time $STARTTIME --end-time $ENDTIME --period 60 --namespace AWS/EC2 --statistics Average --dimensions "Name=InstanceId,Value=$INSTANCEID" --region "{{ s3_region }}" >> $res_dir/cw_ec2_$m
+# done
+# for m in {"CPUUtilization", "VolumeReadBytes", "VolumeWriteBytes", "VolumeReadOps", "VolumeWriteOps", "VolumeTotalReadTime", "VolumeTotalWriteTime", "VolumeIdleTime", "VolumeQueueLength", "VolumeThroughputPercentage", "VolumeConsumedReadWriteOps"}
+# do
+#   aws cloudwatch get-metric-statistics --metric-name $m --start-time $STARTTIME --end-time $ENDTIME --period 60 --namespace AWS/EBS --statistics Average --dimensions "Name=InstanceId,Value=$INSTANCEID" --region "{{ s3_region }}" >> $res_dir/cw_ebs_$m
+# done
+
+#Copy all in dir "results" to s3
+aws s3 cp {{ result_dir }}/ $s3_dir --region={{ s3_region }} --recursive
+
+exit

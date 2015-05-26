@@ -1,0 +1,20 @@
+---
+# file: /roles/fio/tasks/exe.yml
+
+##########################################################
+# Execute a fio workload
+
+- name: Execute fio benchmark
+  hosts: tag_exp_fio
+  remote_user: ubuntu
+  gather_facts: yes
+  vars_files:
+  # Import OS related variables, e.g., "group_vars/ubuntu".
+  - "../../../group_vars/{{ ansible_distribution }}"
+  # Import cloud provider related variables, e.g., "group_vars/aws".
+  - "../../../group_vars/aws"
+  # Import fio variables
+  - "../vars/main.yml"
+  tasks:
+    - name: "Run fio workload {{ wl }}"
+      shell: "screen -S fio -d -m {{ fio_workload_dir }}/start_{{ wl }}.sh"

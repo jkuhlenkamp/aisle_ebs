@@ -1,0 +1,38 @@
+---
+# file: /roles/raid/tasks/main.yml
+
+##########################################################
+# Configure software raid0
+
+- name: Install mdadm
+  sudo: yes
+  apt: name=mdadm state=present
+
+- name: Create device
+  sudo: yes
+  shell: "sudo mdadm --create /dev/md0 --auto md --level=0 --raid-devices=2 /dev/xvdb /dev/xvdc"
+
+- name: Create device
+  sudo: yes
+  shell: "mkfs.ext4 -b ${{ fs_blocksize }} /dev/md0"
+
+- name: Create mount dir '/home/ubuntu/fio'
+  file: >
+    path=/home/ubuntu/fio
+    state=directory
+    recurse=yes
+    owner=ubuntu
+    group=ubuntu
+    mode="0755"
+
+- name: Mount device under mount point
+  sudo: yes
+  shell: "mount -o noatime,nodiratime,discard /dev/md0 /home/ubuntu/fio"
+
+- name: Create device
+  sudo: yes
+  shell: "chown ubuntu:ubuntu /home/ubuntu/fio/"
+
+- name: Create device
+  sudo: yes
+  shell: "chown ubuntu:ubuntu/home/ubuntu/fio/lost+found/"

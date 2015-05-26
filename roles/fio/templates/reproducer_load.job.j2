@@ -1,0 +1,35 @@
+{# file: /roles/fio/templates/reproducer.job.j2 #}
+{# Jinja2 template to render a fio workload file #}
+# -- start job file --
+[global]
+directory={{ home_dir }}/fio
+filesize={{ fio_filesize }}
+nrfiles={{ fio_nrfiles }}
+filename_format=testfile.$filenum
+
+ioengine={{ fio_ioengine }}
+#iodepth={{ fio_iodepth }}
+
+rw={{ fio_rw }}
+
+direct={{ fio_direct }}
+refill_buffers={{ fio_refill_buffers }}
+#invalidate={{ fio_invalidate }}
+
+#numjobs={{ fio_numjobs }}
+#blocksize={{ fio_blocksize }}
+numjobs=1
+blocksize=128K
+size={{ fio_filesize }}
+#time_based={{ fio_time_based }}
+#runtime={{ fio_runtime }}
+
+log_avg_msec=500
+group_reporting=1
+
+[load - {{ fio_rw }}]
+write_iops_log=iops_{{ fio_rw }}_load
+write_bw_log=bw_{{ fio_rw }}_load
+write_lat_log=lat_{{ fio_rw }}_load
+
+# -- end job file --

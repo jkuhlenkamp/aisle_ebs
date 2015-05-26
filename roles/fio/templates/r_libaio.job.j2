@@ -1,0 +1,29 @@
+{# file: /roles/fio/templates/read_only.j2 #}
+{# Jinja2 template to render a fio workload file #}
+# -- start job file --
+[global]
+directory={{ home_dir }}/fio
+log_avg_msec=500
+ioengine=libaio
+iodepth=16
+rw= {{ rw }}
+filesize=1G
+direct=1
+invalidate=1
+blocksize={{ blocksize }}
+time_based
+filename=fio_file
+
+[load]
+rate_iops=0
+# Increase runtime at 0 IOPS to reload IOPS pool after file creation
+#[2DO: Maybe change to a second fio workload file to avoid mixup with main workload?]
+runtime=3000
+
+[run1]
+runtime=3000
+write_iops_log=iops
+write_bw_log=bw
+write_lat_log=lat
+
+# -- end job file --

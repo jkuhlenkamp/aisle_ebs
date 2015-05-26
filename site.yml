@@ -1,0 +1,143 @@
+---
+#This Playbook deploys a fio run on an EC2 instance and uploads the results to S3
+
+- name: Test 1
+  hosts: localhost
+  vars_files: 
+  - exp/env.yml
+  tasks:
+    - debug: var=hostvars
+
+
+- name: Provisioning benchmarking execution environment
+  hosts: localhost
+  gather_facts: False
+  vars_files: 
+  - exp/env.yml
+  tasks:
+    - name: Provisioning instances from AWS EC2
+      ec2:
+        key_name: "{{ aws_ssh_key }}"
+        group_id: "{{ aws_group_id }}"
+        vpc_subnet_id: "{{ aws_vpc_subnet_id }}"
+        region: "{{ aws_region }}"
+        instance_type: "{{ aws_instance_type }}"
+        ebs_optimized: "{{ aws_ebs_optimized }}"
+        image: "{{ aws_image_id }}"
+        exact_count: "{{ aws_instance_number }}"
+        wait: yes
+        assign_public_ip: yes
+        volumes: "{{ ebs_volumes }}"
+        instance_tags:
+          Name: fio
+          exp: "{{ aws_tag_prefix }}"
+        count_tag:
+          Name: fio
+          exp: "{{ aws_tag_prefix }}"
+      register: ec2
+    - name: Add new instance to host group
+      add_host: >
+        name={{ item.public_ip }}
+        groupname=testbed
+      with_items: ec2.tagged_instances
+    - name: Wait for SSH to come up
+      wait_for: >
+        host={{ item.public_dns_name }}
+        port=22
+        delay=30
+        timeout=320
+        state=started
+      with_items: ec2.tagged_instances
+
+- name: Setting up volumes in testbed
+  hosts: testbed
+  user: ubuntu                          # [2Do: Read from OS config file]
+  gather_facts: true
+  vars_files: 
+  - exp/env.yml
+  - "group_vars/{{ aws_os_type }}"
+  tasks:
+    - set_fact:
+        sutdevice="/dev/md0"
+        fs_blocksize="4096"
+      when: ebs_volumes|length > 1
+    - include: tasks/raid.yml
+      when: ebs_volumes|length > 1
+    - set_fact:
+        sutdevice="/dev/xvdb"
+        fs_blocksize="4096"
+      when: ebs_volumes|length == 1 
+    - include: tasks/mounted_dev.yml
+      when: ebs_volumes|length == 1
+
+- name: Install and configure FIO benchmark
+  hosts: testbed
+  remote_user: ubuntu
+  gather_facts: yes
+  vars_files:
+  - exp/env.yml
+  - group_vars/ubuntu
+  roles:
+  - role: fio
+
+- name: Update the machine
+  hosts: testbed
+  remote_user: ubuntu
+  gather_facts: yes
+  vars_files:
+  - exp/env.yml
+  - group_vars/ubuntu
+  tasks:
+    - name: Update
+      shell: sudo apt-get update
+
+- name: Gather and save facts
+  hosts: testbed
+  remote_user: ubuntu
+  gather_facts: yes
+  vars_files:
+  - exp/env.yml
+  - group_vars/ubuntu
+  tasks:
+    - name: Gather and save machine facts
+      shell: ansible all -m setup --tree /tmp/facts -i /home/ubuntu/workloads/inv > /home/ubuntu/results/facts.txt
+
+- name: Execute FIO benchmark
+  hosts: testbed
+  remote_user: ubuntu
+  gather_facts: yes
+  vars_files:
+  - exp/env.yml
+  - group_vars/ubuntu
+  tasks:
+    - name: Start workload executor script in screen
+      shell: nohup /home/ubuntu/workloads/exe_exp.sh 0<&- &>/dev/null &
+
+# - name: Wait a specific time period
+#   hosts: localhost
+#   gather_facts: False
+#   vars_files:
+#   - exp/env.yml
+#   tasks:
+#     - name: Wait for fio test to finish
+#       pause: "seconds={{ waiting_time_for_fio }}"
+
+# - name: Terminate instances for the specific tags
+#   hosts: localhost
+#   connection: local
+#   gather_facts: False
+#   vars_files: 
+#   - exp/env.yml
+#   tasks:
+#     - name: Terminate the instance
+#       ec2:
+#         instance_ids: "{{ ec2.instance_ids }}"
+#         region: "{{ aws_region }}"
+#         state: absent
+#         wait: true
+#         instance_tags:
+#           Name: fio
+#           exp: "{{ aws_tag_prefix }}"
+#         count_tag:
+#           Name: fio
+#           exp: "{{ aws_tag_prefix }}"

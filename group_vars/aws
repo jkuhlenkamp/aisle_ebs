@@ -1,0 +1,7 @@
+# file: group_vars/aws
+# This file contains variables specific to AWS
+
+# S3
+s3bucket_uri: https://s3-eu-west-1.amazonaws.com/tub-ansible
+
+# EC2

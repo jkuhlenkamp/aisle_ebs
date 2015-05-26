@@ -1,0 +1,24 @@
+{# file: /roles/fio/templates/01_Validator_48k.job.j2 #}
+{# Jinja2 template to render a fio workload file #}
+# -- start job file --
+[global]
+directory={{ home_dir }}/fio
+log_avg_msec=500
+ioengine=libaio
+iodepth=16
+filesize=512M
+direct=1
+invalidate=1
+blocksize=48k
+time_based
+nrfiles=10
+numjobs=2
+
+[run - random read]
+runtime=600
+rw=randread
+write_iops_log=iops
+write_bw_log=bw
+write_lat_log=lat
+
+# -- end job file --

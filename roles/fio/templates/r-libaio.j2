@@ -1,0 +1,22 @@
+{# file: /roles/fio/templates/read_only.j2 #}
+{# Jinja2 template to render a fio workload file #}
+; -- start job file --
+[global]
+rw=read
+filesize=1G
+direct=1
+invalidate=1
+blocksize=4k
+time_based
+runtime=3000
+directory={{ workload_dir }}
+
+ioengine=libaio
+iodepth=16
+[job1]
+write_iops_log=r-iops
+write_bw_log=r-bw
+write_lat_log=r-lat
+log_avg_msec=1000
+
+; -- end job file --

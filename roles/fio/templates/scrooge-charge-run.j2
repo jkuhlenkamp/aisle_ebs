@@ -1,0 +1,47 @@
+{# file: /roles/fio/templates/01_Validator.job.j2 #}
+{# Jinja2 template to render a fio workload file #}
+# -- start job file --
+
+[global]
+directory={{ home_dir }}/fio
+filesize={{ fio_filesize }}
+nrfiles={{ fio_nrfiles }}
+filename_format=testfile.$filenum
+
+ioengine={{ fio_ioengine }}
+
+rw={{ item.access }}
+
+direct={{ fio_direct }}
+refill_buffers={{ fio_refill_buffers }}
+invalidate={{ fio_invalidate }}
+
+thread=1
+numjobs={{ item.threads }}
+blocksize={{ item.bs }}
+
+time_based={{ fio_time_based }}
+startdelay=0
+ramp_time=0
+
+log_avg_msec=500
+group_reporting=1
+
+exitall=1
+
+[charge-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}]
+runtime={{ item.charge_duration }}
+rate_iops={{ item.charge_iops }}
+write_iops_log=charge-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}
+write_bw_log=charge-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}
+write_lat_log=charge-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}
+
+stonewall
+[burst-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}]
+runtime={{ item.burst_duration }}
+rate_iops={{ item.burst_iops }}
+write_iops_log=burst-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}
+write_bw_log=burst-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}
+write_lat_log=burst-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-dur_{{ item.charge_duration }}
+
+# -- end job file --

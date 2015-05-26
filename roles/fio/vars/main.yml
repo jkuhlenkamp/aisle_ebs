@@ -1,0 +1,12 @@
+# file: /roles/fio/vars/main.yml
+
+fio_workspace_dir: "{{ workspace_dir }}/fio"
+fio_result_dir: "{{ result_dir }}/fio"
+fio_workload_dir: "{{ workload_dir }}/fio"
+
+fio_workload_file: "{{ fio_workload_dir }}/read_heavy.job"
+
+# wl_r_l_name: "r_libaio.job"
+# wl_r_m_name: "r_mmap.job"
+# wl_w_l_name: "w_libaio.job"
+# wl_w_m_name: "w_mmap.job"

@@ -1,0 +1,30 @@
+{# file: /roles/fio/templates/pattern_parallelJobs_singleFile.job.j2 #}
+{# Jinja2 template to render pattern_parallelJobs_singleFile #}
+# -- start job file --
+[global]
+directory={{ home_dir }}/fio
+log_avg_msec=1000
+ioengine=libaio
+iodepth=16
+filesize=1G
+direct=1
+invalidate=1
+blocksize=4k
+time_based
+filename=fio_file
+
+[run1_read]
+runtime=120
+rw=read
+write_iops_log=iops_read
+write_bw_log=bw_read
+write_lat_log=lat_read
+
+[run2_write]
+runtime=120
+rw=write
+write_iops_log=iops_write
+write_bw_log=bw_write
+write_lat_log=lat_write
+
+# -- end job file --

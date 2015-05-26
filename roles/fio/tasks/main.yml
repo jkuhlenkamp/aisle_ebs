@@ -1,0 +1,338 @@
+---
+# file: /roles/fio/tasks/main.yml
+
+##########################################################
+# Create required directories
+- name: "Create result dir: ../results"
+  file: >
+    path={{ result_dir }}
+    state=directory
+    recurse=yes
+    owner={{ user }}
+    group={{ user }}
+    mode="0755"
+
+- name: "Create workload dir: ../workloads/fio"
+  file: >
+    path={{ workload_dir }}
+    state=directory
+    recurse=yes
+    owner={{ user }}
+    group={{ user }}
+    mode="0755"
+
+- name: "Create workload dir: ../workloads/fio/load"
+  file: >
+    path={{ workload_dir }}/load
+    state=directory
+    recurse=yes
+    owner={{ user }}
+    group={{ user }}
+    mode="0755"
+
+- name: "Create workload dir: ../workloads/fio/burn"
+  file: >
+    path={{ workload_dir }}/burn
+    state=directory
+    recurse=yes
+    owner={{ user }}
+    group={{ user }}
+    mode="0755"
+
+- name: "Create workload dir: ../workloads/fio/run"
+  file: >
+    path={{ workload_dir }}/run
+    state=directory
+    recurse=yes
+    owner={{ user }}
+    group={{ user }}
+    mode="0755"
+
+- name: Install fio via apt
+  sudo: true
+  apt: >
+    name=fio 
+    state=present
+    update_cache=yes
+
+- name: "Create workload executor script: exp_exe.sh"
+  template: >
+    src=exe_exp.sh.j2
+    dest="{{ workload_dir }}/exe_exp.sh"
+    owner={{ user }}
+    group={{ user }}
+    mode=0777
+
+##########################################################
+# Create workloads
+
+- name: "Create fio workload files for phase: LOAD"
+  template: >
+    src="fioebs-io1-load.j2"
+    dest="{{ workload_dir }}/load/load.job"
+    owner={{ user }}
+    group={{ user }}
+    mode=0777
+
+- name: "Create fio workload files for phase: BURN"
+  template: >
+    src="fioebs-io1-burn.j2"
+    dest="{{ workload_dir }}/burn/burn.job"
+    owner={{ user }}
+    group={{ user }}
+    mode=0777
+
+# Threads: [1, 2, 4, 8, 12, 16, 24, 32, 48, 64]
+# Request blocksize: [4K, 4M]
+# File access patterns: [randread, write]
+# Workload template: [ninja-p1-run.j2, scrooge-run.j2]
+
+# - name: "Create fio workload files for phase: RUN"
+#   template: >
+#     src="scrooge-charge-run.j2"
+#     dest="{{ workload_dir }}/run/run-{{ item.access }}-bs_{{ item.bs }}-thr_{{ item.threads }}-chr_dur_{{ item.charge_duration }}-chr_iops_{{ item.charge_iops }}-bur_dur_{{ item.burst_duration }}-bur_dur_{{ item.burst_iops }}.job"
+#     owner={{ user }}
+#     group={{ user }}
+#     mode=0777
+#   with_items:
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '60', charge_iops: '0', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '300', charge_iops: '0', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '600', charge_iops: '0', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '900', charge_iops: '0', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '1200', charge_iops: '0', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '60', charge_iops: '40', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '300', charge_iops: '40', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '600', charge_iops: '40', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '900', charge_iops: '40', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '1200', charge_iops: '40', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '60', charge_iops: '80', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '300', charge_iops: '80', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '600', charge_iops: '80', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '900', charge_iops: '80', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '1200', charge_iops: '80', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '60', charge_iops: '120', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '300', charge_iops: '120', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '600', charge_iops: '120', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '900', charge_iops: '120', burst_duration: '600', burst_iops: '2000' }
+#     - { access: 'randread', threads: '1', bs: '4K', charge_duration: '1200', charge_iops: '120', burst_duration: '600', burst_iops: '2000' }
+
+
+# Generate workloads for experiment type: ROADWAY
+# Request size [KiB]: [32, 40, 48, 64]
+# Threads: [1, 4, 16]
+# Read percentage: [0, 25, 50, 75, 100]
+- name: "Create fio workload files for experiment ROADWAY for phase: RUN"
+  template: >
+    src="fioebs-io1-run.j2"
+    dest="{{ workload_dir }}/run/run-{{ item.access }}-bs_{{ item.bs }}-thr_{{ item.threads }}-rp_{{ item.rperc }}-wp_{{ item.wperc }}.job"
+    owner={{ user }}
+    group={{ user }}
+    mode=0777
+  with_items:
+    - { access: 'randrw', threads: '1', bs: '4K', rperc: 0, wperc: 100}
+    - { access: 'randrw', threads: '1', bs: '4K', rperc: 25, wperc: 75}
+    - { access: 'randrw', threads: '1', bs: '4K', rperc: 50, wperc: 50}
+    - { access: 'randrw', threads: '1', bs: '4K', rperc: 75, wperc: 25}
+    - { access: 'randrw', threads: '1', bs: '4K', rperc: 100, wperc: 0}
+    - { access: 'randrw', threads: '1', bs: '32K', rperc: 0, wperc: 100}
+    - { access: 'randrw', threads: '1', bs: '32K', rperc: 25, wperc: 75}
+    - { access: 'randrw', threads: '1', bs: '32K', rperc: 50, wperc: 50}
+    - { access: 'randrw', threads: '1', bs: '32K', rperc: 75, wperc: 25}
+    - { access: 'randrw', threads: '1', bs: '32K', rperc: 100, wperc: 0}
+    - { access: 'randrw', threads: '1', bs: '64K', rperc: 0, wperc: 100}
+    - { access: 'randrw', threads: '1', bs: '64K', rperc: 25, wperc: 75}
+    - { access: 'randrw', threads: '1', bs: '64K', rperc: 50, wperc: 50}
+    - { access: 'randrw', threads: '1', bs: '64K', rperc: 75, wperc: 25}
+    - { access: 'randrw', threads: '1', bs: '64K', rperc: 100, wperc: 0}
+    - { access: 'randrw', threads: '1', bs: '256K', rperc: 0, wperc: 100}
+    - { access: 'randrw', threads: '1', bs: '256K', rperc: 25, wperc: 75}
+    - { access: 'randrw', threads: '1', bs: '256K', rperc: 50, wperc: 50}
+    - { access: 'randrw', threads: '1', bs: '256K', rperc: 75, wperc: 25}
+    - { access: 'randrw', threads: '1', bs: '256K', rperc: 100, wperc: 0}
+    - { access: 'randrw', threads: '1', bs: '1024K', rperc: 0, wperc: 100}
+    - { access: 'randrw', threads: '1', bs: '1024K', rperc: 25, wperc: 75}
+    - { access: 'randrw', threads: '1', bs: '1024K', rperc: 50, wperc: 50}
+    - { access: 'randrw', threads: '1', bs: '1024K', rperc: 75, wperc: 25}
+    - { access: 'randrw', threads: '1', bs: '1024K', rperc: 100, wperc: 0}
+    # - { access: 'randrw', threads: '4', bs: '4K', rperc: 0, wperc: 100}
+    # - { access: 'randrw', threads: '4', bs: '4K', rperc: 25, wperc: 75}
+    # - { access: 'randrw', threads: '4', bs: '4K', rperc: 50, wperc: 50}
+    # - { access: 'randrw', threads: '4', bs: '4K', rperc: 75, wperc: 25}
+    # - { access: 'randrw', threads: '4', bs: '4K', rperc: 100, wperc: 0}
+    # - { access: 'randrw', threads: '4', bs: '32K', rperc: 0, wperc: 100}
+    # - { access: 'randrw', threads: '4', bs: '32K', rperc: 25, wperc: 75}
+    # - { access: 'randrw', threads: '4', bs: '32K', rperc: 50, wperc: 50}
+    # - { access: 'randrw', threads: '4', bs: '32K', rperc: 75, wperc: 25}
+    # - { access: 'randrw', threads: '4', bs: '32K', rperc: 100, wperc: 0}
+    # - { access: 'randrw', threads: '4', bs: '40K', rperc: 0, wperc: 100}
+    # - { access: 'randrw', threads: '4', bs: '40K', rperc: 25, wperc: 75}
+    # - { access: 'randrw', threads: '4', bs: '40K', rperc: 50, wperc: 50}
+    # - { access: 'randrw', threads: '4', bs: '40K', rperc: 75, wperc: 25}
+    # - { access: 'randrw', threads: '4', bs: '40K', rperc: 100, wperc: 0}
+    # - { access: 'randrw', threads: '4', bs: '48K', rperc: 0, wperc: 100}
+    # - { access: 'randrw', threads: '4', bs: '48K', rperc: 25, wperc: 75}
+    # - { access: 'randrw', threads: '4', bs: '48K', rperc: 50, wperc: 50}
+    # - { access: 'randrw', threads: '4', bs: '48K', rperc: 75, wperc: 25}
+    # - { access: 'randrw', threads: '4', bs: '48K', rperc: 100, wperc: 0}
+    # - { access: 'randrw', threads: '4', bs: '64K', rperc: 0, wperc: 100}
+    # - { access: 'randrw', threads: '4', bs: '64K', rperc: 25, wperc: 75}
+    # - { access: 'randrw', threads: '4', bs: '64K', rperc: 50, wperc: 50}
+    # - { access: 'randrw', threads: '4', bs: '64K', rperc: 75, wperc: 25}
+    # - { access: 'randrw', threads: '4', bs: '64K', rperc: 100, wperc: 0}
+    # - { access: 'randrw', threads: '4', bs: '128K', rperc: 0, wperc: 100}
+    # - { access: 'randrw', threads: '4', bs: '128K', rperc: 25, wperc: 75}
+    # - { access: 'randrw', threads: '4', bs: '128K', rperc: 50, wperc: 50}
+    # - { access: 'randrw', threads: '4', bs: '128K', rperc: 75, wperc: 25}
+    # - { access: 'randrw', threads: '4', bs: '128K', rperc: 100, wperc: 0}
+
+
+# - name: "Create fio workload files for phase: RUN"
+#   template: >
+#     src="ninja-baseline-run.j2"
+#     dest="{{ workload_dir }}/run/run-{{ item.access }}-bs_{{ item.bs }}-thr_{{ item.threads }}.job"
+#     owner={{ user }}
+#     group={{ user }}
+#     mode=0777
+#   with_items:
+#     - { access: 'randread', threads: '1', bs: '4K' }
+#     - { access: 'randread', threads: '4', bs: '4K' }
+#     - { access: 'randread', threads: '1', bs: '64K' }
+#     - { access: 'randread', threads: '4', bs: '64K' }
+#     - { access: 'write', threads: '1', bs: '4K' }
+#     - { access: 'write', threads: '4', bs: '4K' }
+#     - { access: 'write', threads: '1', bs: '64K' }
+#     - { access: 'write', threads: '4', bs: '64K' }
+#     - { access: 'read', threads: '1', bs: '4K' }
+#     - { access: 'read', threads: '4', bs: '4K' }
+#     - { access: 'read', threads: '1', bs: '64K' }
+#     - { access: 'read', threads: '4', bs: '64K' }
+
+# - name: "Create fio workload files for phase: RUN"
+#   template: >
+#     src="scrooge-run.j2"
+#     dest="{{ workload_dir }}/run/run-{{ item.access }}-bs_{{ item.bs }}-thr_{{ item.threads }}-delay_{{ item.delay }}.job"
+#     owner={{ user }}
+#     group={{ user }}
+#     mode=0777
+#   with_items:
+#     - { access: 'write', threads: '1', bs: '4K', delay: '5'}
+#     - { access: 'write', threads: '2', bs: '4K' }
+#     - { access: 'write', threads: '4', bs: '4K' }
+#     - { access: 'write', threads: '8', bs: '4K' }
+#     - { access: 'write', threads: '12', bs: '4K' }
+#     - { access: 'write', threads: '16', bs: '4K' }
+#     - { access: 'write', threads: '24', bs: '4K' }
+#     - { access: 'write', threads: '32', bs: '4K' }
+#     - { access: 'write', threads: '48', bs: '4K' }
+#     - { access: 'write', threads: '64', bs: '4K' }
+#     - { access: 'randread', threads: '1', bs: '4K' }
+#     - { access: 'randread', threads: '2', bs: '4K' }
+#     - { access: 'randread', threads: '4', bs: '4K' }
+#     - { access: 'randread', threads: '8', bs: '4K' }
+#     - { access: 'randread', threads: '12', bs: '4K' }
+#     - { access: 'randread', threads: '16', bs: '4K' }
+#     - { access: 'randread', threads: '24', bs: '4K' }
+#     - { access: 'randread', threads: '32', bs: '4K' }
+#     - { access: 'randread', threads: '48', bs: '4K' }
+#     - { access: 'randread', threads: '64', bs: '4K' }
+#     - { access: 'write', threads: '1', bs: '256K' }
+#     - { access: 'write', threads: '2', bs: '256K' }
+#     - { access: 'write', threads: '4', bs: '256K' }
+#     - { access: 'write', threads: '8', bs: '256K' }
+#     - { access: 'write', threads: '12', bs: '256K' }
+#     - { access: 'write', threads: '16', bs: '256K' }
+#     - { access: 'write', threads: '24', bs: '256K' }
+#     - { access: 'write', threads: '32', bs: '256K' }
+#     - { access: 'write', threads: '48', bs: '256K' }
+#     - { access: 'write', threads: '64', bs: '256K' }
+#     - { access: 'randread', threads: '1', bs: '256K' }
+#     - { access: 'randread', threads: '2', bs: '256K' }
+#     - { access: 'randread', threads: '4', bs: '256K' }
+#     - { access: 'randread', threads: '8', bs: '256K' }
+#     - { access: 'randread', threads: '12', bs: '256K' }
+#     - { access: 'randread', threads: '16', bs: '256K' }
+#     - { access: 'randread', threads: '24', bs: '256K' }
+#     - { access: 'randread', threads: '32', bs: '256K' }
+#     - { access: 'randread', threads: '48', bs: '256K' }
+#     - { access: 'randread', threads: '64', bs: '256K' }
+#     - { access: 'write', threads: '1', bs: '512K' }
+#     - { access: 'write', threads: '2', bs: '512K' }
+#     - { access: 'write', threads: '4', bs: '512K' }
+#     - { access: 'write', threads: '8', bs: '512K' }
+#     - { access: 'write', threads: '12', bs: '512K' }
+#     - { access: 'write', threads: '16', bs: '512K' }
+#     - { access: 'write', threads: '24', bs: '512K' }
+#     - { access: 'write', threads: '32', bs: '512K' }
+#     - { access: 'write', threads: '48', bs: '512K' }
+#     - { access: 'write', threads: '64', bs: '512K' }
+#     - { access: 'randread', threads: '1', bs: '512K' }
+#     - { access: 'randread', threads: '2', bs: '512K' }
+#     - { access: 'randread', threads: '4', bs: '512K' }
+#     - { access: 'randread', threads: '8', bs: '512K' }
+#     - { access: 'randread', threads: '12', bs: '512K' }
+#     - { access: 'randread', threads: '16', bs: '512K' }
+#     - { access: 'randread', threads: '24', bs: '512K' }
+#     - { access: 'randread', threads: '32', bs: '512K' }
+#     - { access: 'randread', threads: '48', bs: '512K' }
+#     - { access: 'randread', threads: '64', bs: '512K' }
+    
+##########################################################
+# Configure result upload
+
+- name: "Create inv dir: ../workloads/inv"
+  file: >
+    path={{ workload_dir }}/inv
+    state=directory
+    recurse=yes
+    owner={{ user }}
+    group={{ user }}
+    mode="0775"
+
+- name: "Create localhost file: hosts"
+  template: >
+    src=hosts.j2
+    dest="{{ workload_dir }}/inv/hosts"
+    owner={{ user }}
+    group={{ user }}
+    mode=0664
+    
+- name: "Install package: python-pip"
+  sudo: true
+  apt: >
+    name=python-pip
+    state=latest
+    update_cache=yes
+
+- name: "Install package: boto"
+  sudo: true
+  pip: name=boto state=latest
+
+- name: "Install package: awscli"
+  sudo: true
+  pip: name=awscli state=latest
+
+- name: "Install package: ansible"
+  sudo: true
+  apt: name=ansible state=latest
+
+- name: "Create config dir: ../.aws/"
+  file: >
+    path="{{ home_dir }}/.aws"
+    state=directory
+    recurse=yes
+    owner={{ user }}
+    group={{ user }}
+    mode="0755"
+
+- name: "Create AWS CLI config file: ../.aws/config"
+  template: >
+    src="awscli_config.j2"
+    dest="{{ home_dir }}/.aws/config"
+    owner={{ user }}
+    group={{ user }}
+    mode=0600
+
+- name: "Export AWS_CONFIG_FILE in ../.bashrc"
+  lineinfile: >
+    dest=/home/ubuntu/.bashrc
+    line="export AWS_CONFIG_FILE={{ home_dir }}//.aws/config"

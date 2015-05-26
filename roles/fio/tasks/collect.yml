@@ -1,0 +1,28 @@
+---
+# file: /roles/fio/tasks/exe.yml
+
+##########################################################
+# Collect results that are generated after the execution
+#   of a fio workload 
+
+- name: Collect results for fio benchmark
+  hosts: tag_exp_fio
+  gather_facts: True
+  vars_files:
+  # Import OS related variables, e.g., "group_vars/ubuntu".
+  - "../../../group_vars/Ubuntu"
+  tasks:
+    # - name: Create local directory for remote node
+    #   file: >
+    #     path="/User/jk/Desktop/fio/results/node_{{ item }}"
+    #     state=directory
+    #   with_items:
+    #     - "{{ tag_exp_fio }}"
+    - name: Collect results from home dir
+      shell: "scp -i {{ key }} {{ user }}@{{ item }}:{{ home_dir }}/. /User/jk/Desktop/fio_exp/02_results/w_l/node_{{ item }}/"
+      with_items:
+        - groups['app_servers']
+    - name: Collect results from result dir
+      shell: "scp -i {{ key }} {{ user }}@{{ item }}:{{ home_dir }}/results/fio/result-wl_write_libaio /User/jk/Desktop/fio_exp/02_results/w_l/node_{{ item }}/"
+      with_items:
+        - groups['app_servers']

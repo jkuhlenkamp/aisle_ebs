@@ -1,0 +1,48 @@
+{# file: /roles/fio/templates/fioebs-io1-run.j2 #}
+{# Jinja2 template to render a fio workload file #}
+# -- start job file --
+
+[global]
+directory={{ home_dir }}/fio
+filesize={{ fio_filesize }}
+nrfiles={{ fio_nrfiles }}
+filename_format=testfile.$filenum
+
+# ioengine={{ fio_ioengine }}
+# rw={{ item.access }}
+# rwmixread={{ item.rperc }}
+# rwmixwrite={{ item.wperc }}
+
+direct={{ fio_direct }}
+refill_buffers={{ fio_refill_buffers }}
+invalidate={{ fio_invalidate }}
+
+thread=1
+
+time_based=1
+startdelay=0
+ramp_time=10
+
+log_avg_msec=1000
+group_reporting=1
+
+#exitall=1
+
+[run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-rp_{{ item.rperc }}-wp_{{ item.wperc }}]
+ioengine={{ fio_ioengine }}
+rw={{ item.access }}
+rwmixread={{ item.rperc }}
+rwmixwrite={{ item.wperc }}
+
+numjobs={{ item.threads }}
+blocksize={{ item.bs }}
+
+runtime=120
+
+write_iops_log=run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-rp_{{ item.rperc }}-wp_{{ item.wperc }}
+write_bw_log=run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-rp_{{ item.rperc }}-wp_{{ item.wperc }}
+write_lat_log=run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}-rp_{{ item.rperc }}-wp_{{ item.wperc }}
+
+stonewall
+
+# -- end job file --

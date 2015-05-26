@@ -1,0 +1,17 @@
+# file: group_vars/ubuntu
+# This file contains variables specific to deployments on operating systems based on Ubuntu
+
+user: ubuntu
+hosts_file: /etc/hosts
+home_dir: "/home/{{ user }}"
+tmp_dir: "{{ home_dir }}/tmp"
+
+# Directories to collect measurements and results of any benchmark
+result_dir: "{{ home_dir }}/results"
+workspace_dir: "{{ home_dir }}/workspace"
+workload_dir: "{{ home_dir }}/workloads"
+wl_name: "wl.job"
+
+
+# Target folder on remote nodes to install software
+# java_install_dir : "/opt/java/64/oracle-java{{ java_version_minor }}"

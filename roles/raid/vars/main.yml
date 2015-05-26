@@ -1,0 +1,16 @@
+# file: /roles/iozone/vars/main.yml
+
+iozone_workspace_dir: "{{ workspace_dir }}/iozone"
+iozone_result_dir: "{{ result_dir }}/iozone"
+
+iozone_tar_name: "iozone3_430.tar"
+iozone_untar_name: "iozone3_430"
+iozone_tar_uri: "{{ s3bucket_uri }}/iozone/{{ iozone_tar_name }}"
+
+iozone_workspace_ebs_vol_01_dir: "{{ iozone_workspace_dir }}/ebsvol01"
+iozone_workspace_ebs_vol_02_dir: "{{ iozone_workspace_dir }}/ebsvol02"
+iozone_workspace_ebs_vol_04_dir: "{{ iozone_workspace_dir }}/ebsvol04"
+iozone_workspace_ebs_vol_08_dir: "{{ iozone_workspace_dir }}/ebsvol08"
+
+iozone_workspace_emp_vol_01_dir: "{{ iozone_workspace_dir }}/empvol01"
+iozone_workspace_emp_vol_02_dir: "{{ iozone_workspace_dir }}/empvol02"

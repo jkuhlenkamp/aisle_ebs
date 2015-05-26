@@ -1,0 +1,39 @@
+{# file: /roles/fio/templates/01_Validator.job.j2 #}
+{# Jinja2 template to render a fio workload file #}
+# -- start job file --
+
+[global]
+directory={{ home_dir }}/fio
+filesize={{ fio_filesize }}
+nrfiles={{ fio_nrfiles }}
+filename_format=testfile.$filenum
+
+ioengine={{ fio_ioengine }}
+
+rw={{ item.access }}
+
+direct={{ fio_direct }}
+refill_buffers={{ fio_refill_buffers }}
+invalidate={{ fio_invalidate }}
+
+thread=1
+numjobs={{ item.threads }}
+blocksize={{ item.bs }}
+rate_iops={{ fio_iopsrate }}
+
+time_based={{ fio_time_based }}
+startdelay={{ item.delay }}
+ramp_time=0
+runtime={{ fio_runtime }}
+
+log_avg_msec=500
+group_reporting=1
+
+exitall=1
+
+[run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}]
+write_iops_log=run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}
+write_bw_log=run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}
+write_lat_log=run-{{ item.access }}-thr_{{ item.threads }}-bs_{{ item.bs }}
+
+# -- end job file --

@@ -1,0 +1,35 @@
+{# file: /roles/fio/templates/fioebs-io1-burn.j2 #}
+{# Jinja2 template to render a fio workload file #}
+# -- start job file --
+
+[global]
+directory={{ home_dir }}/fio
+filesize={{ fio_filesize }}
+nrfiles={{ fio_nrfiles }}
+filename_format=testfile.$filenum
+
+ioengine=libaio
+iodepth=32
+rw=read
+
+direct=1
+refill_buffers={{ fio_refill_buffers }}
+invalidate={{ fio_invalidate }}
+
+numjobs=1
+blocksize=1K
+time_based=1
+ramp_time=10
+
+# IO1 volumes do not have a credit pool to deplete. Therefore, we use 
+# a reduced burn phase. However, we use 60 seconds as warm up for caches.
+runtime=60
+
+log_avg_msec=1000
+group_reporting=1
+
+[burn]
+write_iops_log=burn
+write_bw_log=burn
+write_lat_log=burn
+# -- end job file --

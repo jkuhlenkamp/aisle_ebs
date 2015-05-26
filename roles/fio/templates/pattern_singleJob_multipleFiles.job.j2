@@ -1,0 +1,29 @@
+{# file: /roles/fio/templates/pattern_singleJob_multipleFiles.job.j2 #}
+{# Jinja2 template to render pattern_singleJob_multipleFiles #}
+# -- start job file --
+[global]
+directory={{ home_dir }}/fio
+log_avg_msec=1000
+ioengine=libaio
+iodepth=16
+filesize=200M
+direct=1
+invalidate=1
+blocksize=4k
+time_based
+nrfiles=5
+#if needed files can be named differently #of filenames =! nrfiles
+filename=a
+filename=b
+filename=c
+filename=d
+filename=e
+
+[run1_write]
+runtime=120
+rw=write
+write_iops_log=iops_write
+write_bw_log=bw_write
+write_lat_log=lat_write
+
+# -- end job file --
